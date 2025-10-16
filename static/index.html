@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Boston House Price Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 40px;
+    }
+    .label_text {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 10px;
+      max-width: 900px;
+      margin: auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #predictBtn {
+      background: #007bff;
+      color: white;
+    }
+
+    #resetBtn {
+      background: #e0e0e0;
+    }
+
+    .result {
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d6a4f;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="label_text">Boston House Price Predictor</h1>
+  <p class="label_text">Enter feature values to predict the median house price.</p>
+
+  <div class="container">
+    <form id="predictForm">
+      <div class="grid" id="inputs"></div>
+
+      <div class="buttons">
+        <button type="button" id="predictBtn">Predict Price</button>
+        <button type="reset" id="resetBtn">Reset</button>
+      </div>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const fields = [
+      "CRIM", "ZN", "INDUS", "NOX", "RM", "AGE",
+      "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"
+    ];
+
+    const fields_description = {
+      "CRIM": 'Per capita crime rate',
+      "ZN": 'Residential land zoned (%)',
+      "INDUS": 'Non-retail business acres per town',
+      "NOX": 'Nitric oxides concentration',
+      "RM": 'Average rooms per dwelling', 
+      "AGE": 'Proportion of owner-occupied units built prior to 1940 (%)',
+      "DIS": 'Weighted distance to employment centers', 
+      "RAD": 'Index of accessibility to radial highways', 
+      "TAX": 'Full-value property-tax rate', 
+      "PTRATIO": 'Pupil-teacher ratio by town', 
+      "B": '1000(Bk - 0.63)^2 where Bk is Black proportion', 
+      "LSTAT": 'Lower status of the population (%)',
+    }
+
+    const inputContainer = document.getElementById("inputs");
+    fields.forEach(field => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <label>${field}</label>
+        <input type="number" step="any" id="${field}" placeholder="${fields_description[field]}">
+      `;
+      inputContainer.appendChild(div);
+    });
+
+    document.getElementById('predictBtn').addEventListener('click', async () => {
+      const payload = {};
+      fields.forEach(id => {
+        payload[id] = parseFloat(document.getElementById(id).value) || 0;
+      });
+
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      document.getElementById('result').textContent =
+        `Predicted House Price: $${result.prediction.toFixed(2)}k`;
+    });
+  </script>
+</body>
+</html>
